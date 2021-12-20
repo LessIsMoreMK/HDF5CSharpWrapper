@@ -17,7 +17,7 @@ namespace HDF5CSharpWrapper.Tests
 
             var openedFileId = file.Create(DirectoryName + "groupsTest.h5");
             var openedGroupId = groups.CreateGroup(openedFileId, "Arrays");
-            var openedGroupId2 = groups.CreateGroup(openedFileId, "Arrays2");
+            var openedGroupId2 = groups.CreateGroup(openedGroupId, "Arrays2");
             file.Close(openedFileId);
         }
 
@@ -36,8 +36,14 @@ namespace HDF5CSharpWrapper.Tests
         [TestMethod]
         public void OpenGroupInsideGroup()
         {
-            //TODO
-            Assert.IsTrue(false);
+            File file = new File();
+            Groups groups = new Groups();
+
+            var openedFileId = file.Open(DirectoryName + "groupsTest.h5");
+            var openedGroupId = groups.OpenGroup(openedFileId, "Arrays");
+            var openedGroupId2 = groups.OpenGroup(openedGroupId, "Arrays2");
+            file.Close(openedFileId);
+            Assert.IsTrue(openedGroupId != -1 && openedGroupId2 != -1);
         }
 
         [TestMethod]
@@ -55,8 +61,15 @@ namespace HDF5CSharpWrapper.Tests
         [TestMethod]
         public void CreateGroupInsideGroup()
         {
-            //TODO
-            Assert.IsTrue(false);
+            File file = new File();
+            Groups groups = new Groups();
+
+            var createdFileId = file.Create(DirectoryName + "groupsTest3.h5");
+            var createdGroupId = groups.CreateGroup(createdFileId, "groupName");
+            var createdGroupId2 = groups.CreateGroup(createdGroupId, "second");
+            var createdGroupId3 = groups.CreateGroup(createdGroupId2, "third");
+            file.Close(createdFileId);
+            Assert.IsTrue(createdGroupId != -1 && createdGroupId2 != -1 && createdGroupId3 != -1);
         }
 
         [TestMethod]
@@ -66,7 +79,7 @@ namespace HDF5CSharpWrapper.Tests
             Groups groups = new Groups();
 
             var createdFileId = file.Open(DirectoryName + "groupsTest.h5");
-            var removedGroupId = groups.RemoveGroup(createdFileId, "Arrays2");
+            var removedGroupId = groups.RemoveGroup(createdFileId, "Arrays");
             file.Close(createdFileId);
             Assert.IsTrue(removedGroupId != -1);
         }

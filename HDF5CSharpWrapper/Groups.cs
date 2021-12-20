@@ -2,7 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 namespace HDF5CSharpWrapper
 {
@@ -18,7 +21,7 @@ namespace HDF5CSharpWrapper
         /// <param name="groupName">Group name to be opened</param>
         /// <returns>Group Location Id</returns>
         public long OpenGroup(long groupLocationId, string groupName)
-            => H5G.open(groupLocationId, string.Concat("/", groupName));
+            => H5G.open(groupLocationId, groupName);
 
         /// <summary>
         /// Create a specific group
@@ -27,20 +30,25 @@ namespace HDF5CSharpWrapper
         /// <param name="groupName">Group name to be created</param>
         /// <returns>Group Location Id</returns>
         public long CreateGroup(long groupLocationId, string groupName)
-            => H5G.create(groupLocationId, string.Concat("/", groupName));
+            => H5G.create(groupLocationId, groupName);
 
         /// <summary>
-        /// Creates group inside group
+        /// Creates all groups seperated with /
         /// </summary>
-        /// <param name="groupLocationId"></param>
-        /// <param name="groupName"></param>
+        /// <param name="groupLocationId">Starting group id</param>
+        /// <param name="groupNames">Groups names</param>
         /// <returns>Group Location Id</returns>
-        public long CreateGroupInsideGroup(long groupLocationId, string groupName)
+        public long CreateAllGroupsSeperatedWithForwardslash(long groupLocationId, string groupNames)
         {
-            //TODO 
-            var gid = H5G.create(groupLocationId, groupName);
-
-            return gid;
+            IEnumerable<string> groups = groupNames.Split('/');
+            long gLId = groupLocationId;
+            groupNames = "";
+            foreach (var name in groups)
+            {
+                groupNames = string.Concat(groupNames, "/", name);
+                gLId = IsGroupExisting(gLId, groupNames) ? OpenGroup(gLId, groupNames) : CreateGroup(gLId, groupNames);
+            }
+            return gLId;
         }
 
         /// <summary>
