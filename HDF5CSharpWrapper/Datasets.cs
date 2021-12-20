@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -132,6 +133,9 @@ namespace HDF5CSharpWrapper
         /// 
         public long SetDataset<T>(long locationId, string datasetName, Array dset)
         {
+            if (typeof(T) == typeof(string))
+                return SetStringDataset(locationId, datasetName, dset);
+
             ulong[] dims = Enumerable.Range(0, dset.Rank).Select(i => { return (ulong)dset.GetLength(i); }).ToArray();
             var spaceId = H5S.create_simple(dset.Rank, dims, null);
             var dataType = GetDatatype(typeof(T));
@@ -146,6 +150,50 @@ namespace HDF5CSharpWrapper
             hnd.Free();
             H5D.close(datasetId);
             H5S.close(spaceId);
+            return datasetId;
+        }
+
+        /// <summary>
+        /// Write string Array to file as dataset
+        /// </summary>
+        /// <param name="locationId">Location id in which array will be created</param>
+        /// <param name="datasetName">Path to dataset</param>
+        /// <param name="dset">Array to be written</param>
+        /// <returns>Dataset id or -1 if failed</returns>
+        public long SetStringDataset(long locationId, string datasetName, Array dset)
+        {
+            long datatype = H5T.create(H5T.class_t.STRING, H5T.VARIABLE);
+            H5T.set_cset(datatype, H5T.cset_t.UTF8);
+            H5T.set_strpad(datatype, H5T.str_t.NULLTERM);
+            int strSz = dset.Length;
+            long spaceId = H5S.create_simple(1, new[] { (ulong)strSz }, null);
+
+            string normalizedName = datasetName;
+            var datasetId = H5D.create(locationId, normalizedName, datatype, spaceId);
+            
+            if (datasetId == -1)
+                return -1;
+
+            GCHandle[] hnds = new GCHandle[strSz];
+            IntPtr[] wdata = new IntPtr[strSz];
+            int cntr = 0;
+            foreach (string str in dset)
+            {
+                hnds[cntr] = GCHandle.Alloc(Encoding.UTF8.GetBytes(str), GCHandleType.Pinned);
+                wdata[cntr] = hnds[cntr].AddrOfPinnedObject();
+                cntr++;
+            }
+
+            var hnd = GCHandle.Alloc(wdata, GCHandleType.Pinned);
+            var result = H5D.write(datasetId, datatype, H5S.ALL, H5S.ALL, H5P.DEFAULT, hnd.AddrOfPinnedObject());
+            hnd.Free();
+
+            for (int i = 0; i < strSz; ++i)
+                hnds[i].Free();
+
+            H5D.close(datasetId);
+            H5S.close(spaceId);
+            H5T.close(datatype);
             return datasetId;
         }
 
