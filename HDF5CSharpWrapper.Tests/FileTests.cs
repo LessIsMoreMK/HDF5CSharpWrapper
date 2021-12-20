@@ -7,49 +7,46 @@ namespace HDF5CSharpWrapper.Tests
     public class FileTests
     {
         private static string DirectoryName { get; set; } = "../../../TestFiles/";
+        static File file;
 
         [ClassInitialize]
         public static void ClassInit(TestContext context)
         {
-            File file = new File();
-            var openedFileId = file.Create(DirectoryName + "test.h5");
-            file.Close(openedFileId);
+            file = new File();
+            var createdfileId = file.Create(DirectoryName + "test.h5");
+            var closeResult = file.Close(createdfileId);
         }
 
         [TestMethod]
-        public void OpenFile()
+        public void OpenAndCloseFile()
         {
-            File file = new File();
             var createdFileId = file.Open(DirectoryName + "test.h5");
-            file.Close(createdFileId);
-            Assert.IsTrue(createdFileId != -1);
+            Assert.IsTrue(createdFileId > 0, "File not opened correctly.");
+            var closeResult = file.Close(createdFileId);
+            Assert.IsTrue(closeResult == 0, "File not closed correctly.");
         }
 
         [TestMethod]
-        public void OpenMissingFile()
+        public void OpenAndCloseMissingFile()
         {
-            File file = new File();
             var createdFileId = file.Open(DirectoryName + "testtt.h5");
-            file.Close(createdFileId);
-            Assert.IsTrue(createdFileId == -1);
+            Assert.IsTrue(createdFileId == -1, "Opened not exisitng file, should fail.");
         }
 
         [TestMethod]
-        public void CreateFile()
+        public void CreateAndCloseFile()
         {
-            File file = new File();
             var createdFileId = file.Create(DirectoryName + "fileTest.h5");
-            file.Close(createdFileId);
-            Assert.IsTrue(createdFileId != -1);
+            Assert.IsTrue(createdFileId > 0, "File not created correctly.");
+            var closeResult = file.Close(createdFileId);
+            Assert.IsTrue(closeResult == 0, "File not closed correctly.");
         }
 
         [TestMethod]
         public void CreateExistingFileWithFileModeWriteIfNew()
         {
-            File file = new File();
             var createdFileId = file.Create(DirectoryName + "test.h5", FileMode.WriteIfNew);
-            file.Close(createdFileId);
-            Assert.IsTrue(createdFileId == -1);
+            Assert.IsTrue(createdFileId == -1, "Already eisiting file created, should fail.");
         }
     }
 }

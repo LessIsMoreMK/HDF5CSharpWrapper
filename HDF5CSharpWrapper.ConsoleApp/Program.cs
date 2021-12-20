@@ -1,8 +1,4 @@
-﻿using HDF.PInvoke;
-using System;
-using System.Text.RegularExpressions;
-
-namespace HDF5CSharpWrapper.ConsoleApp
+﻿namespace HDF5CSharpWrapper.ConsoleApp
 {
     internal class Program
     {

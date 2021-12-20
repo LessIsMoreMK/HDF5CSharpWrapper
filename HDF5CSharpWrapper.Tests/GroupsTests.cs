@@ -8,80 +8,67 @@ namespace HDF5CSharpWrapper.Tests
     public class GroupsTests
     {
         private static string DirectoryName { get; set; } = "../../../TestFiles/";
+        static File file;
+        static Groups groups;
+        static long openedFileId;
 
         [ClassInitialize]
         public static void ClassInit(TestContext context)
         {
-            File file = new File();
-            Groups groups = new Groups();
+            file = new File();
+            groups = new Groups();
 
-            var openedFileId = file.Create(DirectoryName + "groupsTest.h5");
+            openedFileId = file.Create(DirectoryName + "groupsTest.h5");
             var openedGroupId = groups.CreateGroup(openedFileId, "Arrays");
             var openedGroupId2 = groups.CreateGroup(openedGroupId, "Arrays2");
+            var openedGroupId3 = groups.CreateGroup(openedFileId, "Arrays3");
+        }
+
+        [ClassCleanup]
+        public static void ClassCleanup()
+        {
             file.Close(openedFileId);
         }
 
         [TestMethod]
         public void OpenGroup()
         {
-            File file = new File();
-            Groups groups = new Groups();
-
-            var openedFileId = file.Open(DirectoryName + "groupsTest.h5");
             var openedGroupId = groups.OpenGroup(openedFileId, "Arrays");
-            file.Close(openedFileId);
-            Assert.IsTrue(openedGroupId != -1);
+            Assert.IsTrue(openedGroupId > 0, "Group not opened correctly.");
         }
 
         [TestMethod]
         public void OpenGroupInsideGroup()
         {
-            File file = new File();
-            Groups groups = new Groups();
-
-            var openedFileId = file.Open(DirectoryName + "groupsTest.h5");
             var openedGroupId = groups.OpenGroup(openedFileId, "Arrays");
+            Assert.IsTrue(openedGroupId > 0, "Group not opened correctly.");
             var openedGroupId2 = groups.OpenGroup(openedGroupId, "Arrays2");
-            file.Close(openedFileId);
-            Assert.IsTrue(openedGroupId != -1 && openedGroupId2 != -1);
+            Assert.IsTrue(openedGroupId2 > 0, "Group not opened correctly.");
         }
 
         [TestMethod]
         public void CreateGroup()
         {
-            File file = new File();
-            Groups groups = new Groups();
-
-            var createdFileId = file.Create(DirectoryName + "groupsTest2.h5");
-            var createdGroupId = groups.CreateGroup(createdFileId, "groupName");
-            file.Close(createdFileId);
-            Assert.IsTrue(createdGroupId != -1);
+            var createdGroupId = groups.CreateGroup(openedFileId, "CreateGroupName");
+            Assert.IsTrue(createdGroupId > 0, "Group not created correctly.");
         }
 
         [TestMethod]
         public void CreateGroupInsideGroup()
         {
-            File file = new File();
-            Groups groups = new Groups();
-
-            var createdFileId = file.Create(DirectoryName + "groupsTest3.h5");
-            var createdGroupId = groups.CreateGroup(createdFileId, "groupName");
+            var createdGroupId = groups.CreateGroup(openedFileId, "CreateGroupName2");
+            Assert.IsTrue(createdGroupId > 0, "Group not created correctly.");
             var createdGroupId2 = groups.CreateGroup(createdGroupId, "second");
+            Assert.IsTrue(createdGroupId2 > 0, "Group not created correctly.");
             var createdGroupId3 = groups.CreateGroup(createdGroupId2, "third");
-            file.Close(createdFileId);
-            Assert.IsTrue(createdGroupId != -1 && createdGroupId2 != -1 && createdGroupId3 != -1);
+            Assert.IsTrue(createdGroupId3 > 0, "Group not created correctly.");
         }
 
         [TestMethod]
         public void RemoveGroup()
         {
-            File file = new File();
-            Groups groups = new Groups();
-
-            var createdFileId = file.Open(DirectoryName + "groupsTest.h5");
-            var removedGroupId = groups.RemoveGroup(createdFileId, "Arrays");
-            file.Close(createdFileId);
-            Assert.IsTrue(removedGroupId != -1);
+            var removedGroupId = groups.RemoveGroup(openedFileId, "Arrays3");
+            Assert.IsTrue(removedGroupId == 0, "Removed group failed.");
         }
     }
 }

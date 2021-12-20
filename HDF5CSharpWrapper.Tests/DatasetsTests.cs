@@ -1,8 +1,8 @@
 ﻿using HDF5CSharpWrapper.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections;
 using System.Linq;
+using System.Threading;
 
 namespace HDF5CSharpWrapper.Tests
 {
@@ -10,18 +10,29 @@ namespace HDF5CSharpWrapper.Tests
     public class DatasetsTests
     {
         private static string DirectoryName { get; set; } = "../../../TestFiles/";
+        static File file;
+        static Datasets datasets;
+        static long fileIdSets;
+        static long fileIdGets;
 
         [ClassInitialize]
         public static void ClassInit(TestContext context)
         {
-            File file = new File();
-            Groups groups = new Groups();
-            Datasets datasets = new Datasets();
-            int[] Array = { 1 };
+            file = new File();
+            datasets = new Datasets();
+            
+            fileIdSets = file.Create(DirectoryName + "datasetsSetsTest.h5");
+            fileIdGets = file.Open(DirectoryName + "datasetsGetsTest.h5");
 
-            var openedFileId = file.Create(DirectoryName + "datasetsSetsTest.h5");
-            var datasetsId = datasets.SetDataset<int>(openedFileId, "datasetname", Array);
-            file.Close(openedFileId);
+            int[] Array = { 1 };
+            datasets.SetDataset<int>(fileIdSets, "datasetname", Array);
+        }
+
+        [ClassCleanup]
+        public static void ClassCleanup()
+        {
+            file.Close(fileIdSets);
+            file.Close(fileIdGets);
         }
 
         #region GetDataset
@@ -29,126 +40,73 @@ namespace HDF5CSharpWrapper.Tests
         [TestMethod]
         public void GetDataset_TypeInt()
         {
-            File file = new File();
-            Datasets datasets = new Datasets();
-
-            var openedFileId = file.Open(DirectoryName + "datasetsGetsTest.h5");
-            var datasetResult = datasets.GetDataset<Int32>(openedFileId, "/int");
-
-            file.Close(openedFileId);
-
+            var datasetResult = datasets.GetDataset<Int32>(fileIdGets, "/int");
             int[] datasetResultArray = (int[])datasetResult;
             int[] expectedValue = { 255 };
 
-            Assert.IsTrue(datasetResultArray.SequenceEqual(expectedValue));
+            Assert.IsTrue(datasetResultArray.SequenceEqual(expectedValue), "Dataset not get correctly.");
         }
 
         [TestMethod]
         public void GetDataset_TypeIntTwoDim()
         {
-            File file = new File();
-            Datasets datasets = new Datasets();
-
-            var openedFileId = file.Open(DirectoryName + "datasetsGetsTest.h5");
-            var datasetResult = datasets.GetDataset<Int32>(openedFileId, "/Arrays/int");
-
-            file.Close(openedFileId);
-
+            var datasetResult = datasets.GetDataset<Int32>(fileIdGets, "/Arrays/int");
             int[,] datasetResultArray = (int[,])datasetResult;
             int[,] expectedValue = { { 1, 2 },
                                      { 3, 4 } };
 
-            Assert.IsTrue(SequenceEqualsExtension.SequenceEquals(expectedValue, datasetResultArray));
+            Assert.IsTrue(SequenceEqualsExtension.SequenceEquals(expectedValue, datasetResultArray), "Dataset not get correctly.");
         }
 
         [TestMethod]
         public void GetDataset_TypeFloat()
         {
-            File file = new File();
-            Datasets datasets = new Datasets();
-
-            var openedFileId = file.Open(DirectoryName + "datasetsGetsTest.h5");
-            var datasetResult = datasets.GetDataset<Double>(openedFileId, "/float");
-
-            file.Close(openedFileId);
-
+            var datasetResult = datasets.GetDataset<Double>(fileIdGets, "/float");
             double[] datasetResultArray = (double[])datasetResult;
             double[] expectedValue = { 25.0 };
 
-            Assert.IsTrue(datasetResultArray.SequenceEqual(expectedValue));
+            Assert.IsTrue(datasetResultArray.SequenceEqual(expectedValue), "Dataset not get correctly.");
         }
 
         [TestMethod]
         public void GetDataset_TypeFloatTwoDim()
         {
-            File file = new File();
-            Datasets datasets = new Datasets();
-
-            var openedFileId = file.Open(DirectoryName + "datasetsGetsTest.h5");
-            var datasetResult = datasets.GetDataset<Double>(openedFileId, "/Arrays/float");
-
-            file.Close(openedFileId);
-
+            var datasetResult = datasets.GetDataset<Double>(fileIdGets, "/Arrays/float");
             double[,] datasetResultArray = (double[,])datasetResult;
+            //double[,] expectedValue = { { 1.1000000238418579, 2.2000000476837158 },
+            //                            { 3.2999999523162842, 4.4000000953674316} };
+            double[,] expectedValue = { { 1.1, 2.2 },
+                                     { 3.3, 4.4} };
 
-            double[,] expectedValue = { { 1.1000000238418579, 2.2000000476837158 },
-                                        { 3.2999999523162842, 4.4000000953674316} };
-
-            //double[,] expectedValue = { { 1.1, 2.2 },
-            //                         { 3.3, 4.4} };
-
-            Assert.IsTrue(SequenceEqualsExtension.SequenceEquals(expectedValue, datasetResultArray));
+            Assert.IsTrue(SequenceEqualsExtension.SequenceEquals(expectedValue, datasetResultArray), "Dataset not get correctly.");
         }
 
         [TestMethod]
         public void GetDataset_TypeBoolean()
         {
-            File file = new File();
-            Datasets datasets = new Datasets();
-
-            var openedFileId = file.Open(DirectoryName + "datasetsGetsTest.h5");
-            var datasetResult = datasets.GetDataset<Byte>(openedFileId, "/bool");
-
-            file.Close(openedFileId);
-
+            var datasetResult = datasets.GetDataset<Byte>(fileIdGets, "/bool");
             byte[] datasetResultArray = (byte[])datasetResult;
             byte[] expectedValue = { 1 };
 
-            Assert.IsTrue(datasetResultArray.SequenceEqual(expectedValue));
+            Assert.IsTrue(datasetResultArray.SequenceEqual(expectedValue), "Dataset not get correctly.");
         }
 
         [TestMethod]
         public void GetDataset_TypeCharTwoDim()
         {
-            File file = new File();
-            Datasets datasets = new Datasets();
-
-            var openedFileId = file.Open(DirectoryName + "datasetsGetsTest.h5");
-            var datasetResult = datasets.GetDataset<string>(openedFileId, "/Arrays/char");
-
-            file.Close(openedFileId);
-
+            var datasetResult = datasets.GetDataset<Byte>(fileIdGets, "/Arrays/char");
             byte[,] datasetResultArray = (byte[,])datasetResult;
-
             byte[,] expectedValue = { { 32, 33 },
                                       { 34, 35 } };
 
-            Assert.IsTrue(SequenceEqualsExtension.SequenceEquals(expectedValue, datasetResultArray));
+            Assert.IsTrue(SequenceEqualsExtension.SequenceEquals(expectedValue, datasetResultArray), "Dataset not get correctly.");
         }
 
         [TestMethod]
         public void GetDataset_TypeImageThreeDim()
         {
-            File file = new File();
-            Datasets datasets = new Datasets();
-
-            var openedFileId = file.Open(DirectoryName + "datasetsGetsTest.h5");
-            var datasetResult = datasets.GetDataset<SByte>(openedFileId, "/color_image");
-
-            file.Close(openedFileId);
-
+            var datasetResult = datasets.GetDataset<SByte>(fileIdGets, "/color_image");
             sbyte[,,] datasetResultArray = (sbyte[,,])datasetResult;
-
             sbyte[,,] expectedValue = new sbyte[2048, 2560, 3];
 
             for (int x = 0; x < expectedValue.GetLength(0); x++)
@@ -156,43 +114,28 @@ namespace HDF5CSharpWrapper.Tests
                     for (int z = 0; z < expectedValue.GetLength(2); z++)
                         expectedValue[x, y, z] = 0;
 
-            Assert.IsTrue(SequenceEqualsExtension.SequenceEqualsThreeDim(expectedValue, datasetResultArray));
+            Assert.IsTrue(SequenceEqualsExtension.SequenceEqualsThreeDim(expectedValue, datasetResultArray), "Dataset not get correctly.");
         }
 
         [TestMethod]
         public void GetDataset_TypeString()
         {
-            File file = new File();
-            Datasets datasets = new Datasets();
-
-            var openedFileId = file.Open(DirectoryName + "datasetsGetsTest.h5");
-            var datasetResult = datasets.GetDataset<string>(openedFileId, "/vlen_string");
-
-            file.Close(openedFileId);
-
+            var datasetResult = datasets.GetDataset<string>(fileIdGets, "/vlen_string");
             string[] datasetResultArray = (string[])datasetResult;
             string[] expectedValue = { "tu jest napis śćąęłóżźń" };
 
-            Assert.IsTrue(datasetResultArray.SequenceEqual(expectedValue));
+            Assert.IsTrue(datasetResultArray.SequenceEqual(expectedValue), "Dataset not get correctly.");
         }
 
         [TestMethod]
         public void GetDataset_TypeStringTwoDim()
         {
-            File file = new File();
-            Datasets datasets = new Datasets();
-
-            var openedFileId = file.Open(DirectoryName + "datasetsGetsTest.h5");
-            var datasetResult = datasets.GetDataset<string>(openedFileId, "/Arrays/vlen_string");
-
-            file.Close(openedFileId);
-
+            var datasetResult = datasets.GetDataset<string>(fileIdGets, "/Arrays/vlen_string");
             string[,] datasetResultArray = (string[,])datasetResult;
-
             string[,] expectedValue = { { "a", "bbbbbb" },
                                       { "cc", "ddd" } };
 
-            Assert.IsTrue(SequenceEqualsExtension.SequenceEquals(expectedValue, datasetResultArray));
+            Assert.IsTrue(SequenceEqualsExtension.SequenceEquals(expectedValue, datasetResultArray), "Dataset not get correctly.");
         }
 
         #endregion
@@ -202,126 +145,78 @@ namespace HDF5CSharpWrapper.Tests
         [TestMethod]
         public void SetDataset_TypeInt()
         {
-            File file = new File();
-            Datasets datasets = new Datasets();
             int[] intArray = { 1, 2, 3, 4, 5 };
-
-            var openedFileId = file.Open(DirectoryName + "datasetsSetsTest.h5");
-            var dataset = datasets.SetDataset<int>(openedFileId, "int", intArray);
-
-            file.Close(openedFileId);
-
-            Assert.IsTrue(dataset != -1);
+            var dataset = datasets.SetDataset<int>(fileIdSets, "int", intArray);
+            Assert.IsTrue(dataset != -1, "Dataset not set correctly.");
         }
         [TestMethod]
 
         public void SetDataset_TypeIntTwoDim()
         {
-            File file = new File();
-            Datasets datasets = new Datasets();
             int[,] intTwoDimArray = { { 1, 2 },
                                       { 3, 4 } };
-
-            var openedFileId = file.Open(DirectoryName + "datasetsSetsTest.h5");
-            var dataset = datasets.SetDataset<int>(openedFileId, "intTwoDim", intTwoDimArray);
-
-            file.Close(openedFileId);
-
-            Assert.IsTrue(dataset != -1);
+            var dataset = datasets.SetDataset<int>(fileIdSets, "intTwoDim", intTwoDimArray);
+            Assert.IsTrue(dataset != -1, "Dataset not set correctly.");
         }
         [TestMethod]
 
         public void SetDataset_TypeFloat()
         {
-            File file = new File();
-            Datasets datasets = new Datasets();
             double[,] doubleTwoDimArray = { { 1.1, 2.2 },
                                             { 3.3, 4.4} };
-
-            var openedFileId = file.Open(DirectoryName + "datasetsSetsTest.h5");
-            var dataset = datasets.SetDataset<double>(openedFileId, "float", doubleTwoDimArray);
-
-            file.Close(openedFileId);
-
-            Assert.IsTrue(dataset != -1);
+            var dataset = datasets.SetDataset<double>(fileIdSets, "float", doubleTwoDimArray);
+            Assert.IsTrue(dataset != -1, "Dataset not set correctly.");
         }
         [TestMethod]
 
         public void SetDataset_TypeFloatTwoDim()
         {
-            File file = new File();
-            Datasets datasets = new Datasets();
             double[] doubleArray = { 25.0 };
-
-            var openedFileId = file.Open(DirectoryName + "datasetsSetsTest.h5");
-            var dataset = datasets.SetDataset<double>(openedFileId, "floatTwoDim", doubleArray);
-
-            file.Close(openedFileId);
-
-            Assert.IsTrue(dataset != -1);
+            var dataset = datasets.SetDataset<double>(fileIdSets, "floatTwoDim", doubleArray);
+            Assert.IsTrue(dataset != -1, "Dataset not set correctly.");
         }
         [TestMethod]
 
         public void SetDataset_TypeBoolean()
         {
-            File file = new File();
-            Datasets datasets = new Datasets();
             byte[] byteArray = { 1, 0, 1 };
-
-            var openedFileId = file.Open(DirectoryName + "datasetsSetsTest.h5");
-            var dataset = datasets.SetDataset<byte>(openedFileId, "byte", byteArray);
-
-            file.Close(openedFileId);
-
-            Assert.IsTrue(dataset != -1);
+            var dataset = datasets.SetDataset<byte>(fileIdSets, "byte", byteArray);
+            Assert.IsTrue(dataset != -1, "Dataset not set correctly.");
         }
         [TestMethod]
 
         public void SetDataset_TypeBooleanTwoDim()
         {
-            File file = new File();
-            Datasets datasets = new Datasets();
             byte[,] byteTwoDimArray = { { 1, 0 },
                                         { 1, 1 } };
-
-            var openedFileId = file.Open(DirectoryName + "datasetsSetsTest.h5");
-            var dataset = datasets.SetDataset<byte>(openedFileId, "byteTwoDim", byteTwoDimArray);
-
-            file.Close(openedFileId);
-
-            Assert.IsTrue(dataset != -1);
+            var dataset = datasets.SetDataset<byte>(fileIdSets, "byteTwoDim", byteTwoDimArray);
+            Assert.IsTrue(dataset != -1, "Dataset not set correctly.");
         }
 
         [TestMethod]
         public void SetDataset_TypeChar()
         {
-            File file = new File();
-            Datasets datasets = new Datasets();
             byte[,] charArray = { { 32, 33 },
                                   { 34, 35 } };
-
-            var openedFileId = file.Open(DirectoryName + "datasetsSetsTest.h5");
-            var dataset = datasets.SetDataset<byte>(openedFileId, "charTwoDim", charArray);
-
-            file.Close(openedFileId);
-
-            Assert.IsTrue(dataset != -1);
+            var dataset = datasets.SetDataset<byte>(fileIdSets, "charTwoDim", charArray);
+            Assert.IsTrue(dataset != -1, "Dataset not set correctly.");
         }
 
         [TestMethod]
         public void SetDataset_TypeColorImage()
         {
-            File file = new File();
-            Datasets datasets = new Datasets();
             sbyte[,,] imageColorArray = { { { 1, 2, 3}, {4, 5, 6} },
                                           { { 7, 8, 9}, {10, 11, 12} } };
+            var dataset = datasets.SetDataset<sbyte>(fileIdSets, "imageColor", imageColorArray);
+            Assert.IsTrue(dataset != -1, "Dataset not set correctly.");
+        }
 
-            var openedFileId = file.Open(DirectoryName + "datasetsSetsTest.h5");
-            var dataset = datasets.SetDataset<sbyte>(openedFileId, "imageColor", imageColorArray);
-
-            file.Close(openedFileId);
-
-            Assert.IsTrue(dataset != -1);
+        [TestMethod]
+        public void SetDataset_TypeString()
+        {
+            string[] stringArray = { "tu jest napis śćąęłóżźń", "asdf", "asdf" };
+            var dataset = datasets.SetDataset<string>(fileIdSets, "string", stringArray);
+            Assert.IsTrue(dataset != -1, "Dataset not set correctly.");
         }
 
         #endregion
@@ -331,31 +226,47 @@ namespace HDF5CSharpWrapper.Tests
         [TestMethod]
         public void RemoveDataset()
         {
-            File file = new File();
-            Datasets datasets = new Datasets();
-
-            var openedFileId = file.Open(DirectoryName + "datasetsSetsTest.h5");
-            var dataset = datasets.RemoveDataset(openedFileId, "datasetname");
-
-            file.Close(openedFileId);
-
-            Assert.IsTrue(dataset != -1);
+            var removeResult = datasets.RemoveDataset(fileIdSets, "datasetname");
+            Assert.IsTrue(removeResult == 0, "Group not removed correctly.");
         }
 
         [TestMethod]
         public void RemoveNotExistingDataset()
         {
-            File file = new File();
-            Datasets datasets = new Datasets();
-
-            var openedFileId = file.Open(DirectoryName + "datasetsSetsTest.h5");
-            var dataset = datasets.RemoveDataset(openedFileId, "datasetnameee");
-
-            file.Close(openedFileId);
-
-            Assert.IsTrue(dataset == -1);
+            var removeResult = datasets.RemoveDataset(fileIdSets, "datasetnameee");
+            Assert.IsTrue(removeResult == -1, "Group removed, should failed.");
         }
 
         #endregion
+
+        [TestMethod]
+        public void MultiThreadedTest()
+        {
+            double[,] doubleTwoDimArray = { { 1.1, 2.2 },
+                                            { 3.3, 4.4} };
+            long dataset0 = -1, dataset1 = -1, dataset2 = -1; 
+            Thread[] threads = new Thread[3];
+
+            threads[0] = new Thread(() =>
+            {
+                dataset0 = datasets.SetDataset<double>(fileIdSets, "float0", doubleTwoDimArray);
+            });
+            threads[1] = new Thread(() =>
+            {
+                dataset1 = datasets.SetDataset<double>(fileIdSets, "float1", doubleTwoDimArray);
+            });
+            threads[2] = new Thread(() =>
+            {
+                dataset2 = datasets.SetDataset<double>(fileIdSets, "float2", doubleTwoDimArray);
+            });
+
+            foreach (Thread thread in threads)
+                thread.Start();
+
+            foreach (Thread thread in threads)
+                thread.Join();
+
+            Assert.IsTrue(dataset0 != -1 && dataset1 != -1 && dataset2 != -1, "MultiThreadedTest failed.");
+        }
     }
 }
