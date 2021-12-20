@@ -1,5 +1,6 @@
 ﻿using HDF.PInvoke;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -17,17 +18,16 @@ namespace HDF5CSharpWrapper
         /// Get specified dataset to Array
         /// </summary>
         /// <typeparam name="T">Generic type parameter</typeparam>
-        /// <param name="fileId">File id from which array will be created</param>
-        /// <param name="pathToDataset">Path to dataset</param>
+        /// <param name="locationId">Location id from which array will be created</param>
+        /// <param name="datasetName">Path to dataset</param>
         /// <returns>Result Array or -1 if failed</returns>
-        public Array GetDataset<T>(long fileId, string pathToDataset)
+        public Array GetDataset<T>(long locationId, string datasetName)
         {
-            // TODO
-            /*if (typeof(T) == typeof(string)) //String
-                return GetStringDataset(fileID, pathToDataset);*/
+            if (typeof(T) == typeof(string)) 
+                return GetStringDataset(locationId, datasetName);
 
             var dataType = GetDatatype(typeof(T));
-            var datasetId = H5D.open(fileId, pathToDataset);
+            var datasetId = H5D.open(locationId, datasetName);
             Array dataSet;
             var spaceId = H5D.get_space(datasetId);
             int rank = H5S.get_simple_extent_ndims(spaceId);
@@ -65,80 +65,72 @@ namespace HDF5CSharpWrapper
             return dataSet;
         }
 
-        public string GetStringDataset(long groupId, string name)
+        /// <summary>
+        /// Get string dataset to Array
+        /// </summary>
+        /// <param name="locationId">Location id from which array will be created</param>
+        /// <param name="datasetName">Path to dataset</param>
+        /// <returns>Result Array or -1 if failed</returns>
+        public Array GetStringDataset(long locationId, string datasetName)
         {
-            var datasetId = H5D.open(groupId, (name));
+            var datasetId = H5D.open(locationId, datasetName);
             var typeId = H5D.get_type(datasetId);
+            var spaceId = H5D.get_space(datasetId);
+            int rank = H5S.get_simple_extent_ndims(spaceId);
+            long count = H5S.get_simple_extent_npoints(spaceId);
 
-            if (H5T.is_variable_str(typeId) > 0)
+            IntPtr[] rdata = new IntPtr[count];
+
+            GCHandle gcHandle = GCHandle.Alloc(rdata, GCHandleType.Pinned);
+            H5D.read(datasetId, typeId, H5S.ALL, H5S.ALL,  H5P.DEFAULT, gcHandle.AddrOfPinnedObject());
+
+            var resultArray = new List<string>();
+            for (int i = 0; i < rdata.Length; ++i)
             {
-                var spaceId = H5D.get_space(datasetId);
-                long count = H5S.get_simple_extent_npoints(spaceId);
-
-                IntPtr[] rdata = new IntPtr[count];
-
-                GCHandle hnd = GCHandle.Alloc(rdata, GCHandleType.Pinned);
-                H5D.read(datasetId, typeId, H5S.ALL, H5S.ALL,
-                    H5P.DEFAULT, hnd.AddrOfPinnedObject());
-
-                var attrStrings = new List<string>();
-                for (int i = 0; i < rdata.Length; ++i)
+                int attrLength = 0;
+                while (Marshal.ReadByte(rdata[i], attrLength) != 0)
                 {
-                    int attrLength = 0;
-                    while (Marshal.ReadByte(rdata[i], attrLength) != 0)
-                    {
-                        ++attrLength;
-                    }
-
-                    byte[] buffer = new byte[attrLength];
-                    Marshal.Copy(rdata[i], buffer, 0, buffer.Length);
-
-                    string stringPart = Encoding.UTF8.GetString(buffer);
-
-                    attrStrings.Add(stringPart);
-
-                    H5.free_memory(rdata[i]);
+                    ++attrLength;
                 }
 
-                hnd.Free();
-                H5S.close(spaceId);
-                H5D.close(datasetId);
-
-                return attrStrings[0];
+                byte[] buffer = new byte[attrLength];
+                Marshal.Copy(rdata[i], buffer, 0, buffer.Length);
+                string stringPart = Encoding.UTF8.GetString(buffer);
+                resultArray.Add(stringPart);
+                H5.free_memory(rdata[i]);
             }
 
-
-
-            // Must be a non-variable length string.
-            int size = H5T.get_size(typeId).ToInt32();
-            IntPtr iPtr = Marshal.AllocHGlobal(size);
-
-            int result = H5D.read(datasetId, typeId, H5S.ALL, H5S.ALL,
-                H5P.DEFAULT, iPtr);
-            if (result < 0)
-            {
-                throw new IOException("Failed to read dataset");
-            }
-
-            var strDest = new byte[size];
-            Marshal.Copy(iPtr, strDest, 0, size);
-            Marshal.FreeHGlobal(iPtr);
-
+            gcHandle.Free();
+            H5S.close(spaceId);
             H5D.close(datasetId);
 
-            return Encoding.UTF8.GetString(strDest).TrimEnd((char)0);
+            if (rank == 2)
+            {
+                string[,] resultArray2 = new string[resultArray.Count/2, resultArray.Count/2];
+
+                var index = 0;
+                for (int i=0; i < resultArray.Count/2;i++)
+                {
+                    resultArray2[i, 0] = resultArray[index];
+                    resultArray2[i, 1] = resultArray[index+1];
+                    index += 2;
+                }
+                return resultArray2;
+            }
+            else
+                return resultArray.ToArray();
         }
 
         /// <summary>
         /// Write specified Array to file as dataset
         /// </summary>
         /// <typeparam name="T">Generic type parameter</typeparam>
-        /// <param name="fileId">File id in which dataset will be created</param>
+        /// <param name="locationId">Location id in which dataset will be created</param>
         /// <param name="datasetName">Name of a dataset</param>
         /// <param name="dset">Array to be written</param>
         /// <returns>Dataset id or -1 if failed</returns>
         /// 
-        public long SetDataset<T>(long fileId, string datasetName, Array dset)
+        public long SetDataset<T>(long locationId, string datasetName, Array dset)
         {
             ulong[] dims = Enumerable.Range(0, dset.Rank).Select(i => { return (ulong)dset.GetLength(i); }).ToArray();
             var spaceId = H5S.create_simple(dset.Rank, dims, null);
@@ -147,7 +139,7 @@ namespace HDF5CSharpWrapper
             if (dataType == H5T.C_S1)
                 H5T.set_size(dataType, new IntPtr(2));
 
-            var datasetId = H5D.create(fileId, datasetName, dataType, spaceId);
+            var datasetId = H5D.create(locationId, datasetName, dataType, spaceId);
 
             GCHandle hnd = GCHandle.Alloc(dset, GCHandleType.Pinned);
             var result = H5D.write(datasetId, dataType, H5S.ALL, H5S.ALL, H5P.DEFAULT, hnd.AddrOfPinnedObject());
@@ -160,11 +152,11 @@ namespace HDF5CSharpWrapper
         /// <summary>
         /// Remove whole dataset
         /// </summary>
-        /// <param name="fileId">File id in which dataset is</param>
+        /// <param name="locationId">Location id in which dataset is</param>
         /// <param name="datasetPath">Path with name to dataset</param>
         /// <returns>0 if successfull -1 if not</returns>
-        public long RemoveDataset(long fileId, string datasetPath)
-            => H5L.delete(fileId, datasetPath);
+        public long RemoveDataset(long locationId, string datasetPath)
+            => H5L.delete(locationId, datasetPath);
 
         /// <summary>
         /// Get hdf5 variable type

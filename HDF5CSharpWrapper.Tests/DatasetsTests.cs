@@ -124,7 +124,7 @@ namespace HDF5CSharpWrapper.Tests
             Datasets datasets = new Datasets();
 
             var openedFileId = file.Open(DirectoryName + "datasetsGetsTest.h5");
-            var datasetResult = datasets.GetDataset<Byte>(openedFileId, "/Arrays/char");
+            var datasetResult = datasets.GetDataset<string>(openedFileId, "/Arrays/char");
 
             file.Close(openedFileId);
 
@@ -157,6 +157,42 @@ namespace HDF5CSharpWrapper.Tests
                         expectedValue[x, y, z] = 0;
 
             Assert.IsTrue(SequenceEqualsExtension.SequenceEqualsThreeDim(expectedValue, datasetResultArray));
+        }
+
+        [TestMethod]
+        public void GetDataset_TypeString()
+        {
+            File file = new File();
+            Datasets datasets = new Datasets();
+
+            var openedFileId = file.Open(DirectoryName + "datasetsGetsTest.h5");
+            var datasetResult = datasets.GetDataset<string>(openedFileId, "/vlen_string");
+
+            file.Close(openedFileId);
+
+            string[] datasetResultArray = (string[])datasetResult;
+            string[] expectedValue = { "tu jest napis śćąęłóżźń" };
+
+            Assert.IsTrue(datasetResultArray.SequenceEqual(expectedValue));
+        }
+
+        [TestMethod]
+        public void GetDataset_TypeStringTwoDim()
+        {
+            File file = new File();
+            Datasets datasets = new Datasets();
+
+            var openedFileId = file.Open(DirectoryName + "datasetsGetsTest.h5");
+            var datasetResult = datasets.GetDataset<string>(openedFileId, "/Arrays/vlen_string");
+
+            file.Close(openedFileId);
+
+            string[,] datasetResultArray = (string[,])datasetResult;
+
+            string[,] expectedValue = { { "a", "bbbbbb" },
+                                      { "cc", "ddd" } };
+
+            Assert.IsTrue(SequenceEqualsExtension.SequenceEquals(expectedValue, datasetResultArray));
         }
 
         #endregion

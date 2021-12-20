@@ -1,4 +1,8 @@
-﻿namespace HDF5CSharpWrapper.ConsoleApp
+﻿using HDF.PInvoke;
+using System;
+using System.Text.RegularExpressions;
+
+namespace HDF5CSharpWrapper.ConsoleApp
 {
     internal class Program
     {
@@ -13,9 +17,10 @@
 
             #region Groups
 
-            var group = groups.OpenGroup(file2, "/Arrays");
+            /*var group = groups.OpenGroup(file2, "Arrays");
             var group2 = groups.CreateGroup(file, "GroupName");
             var group3 = groups.CreateGroup(file, "second");
+            var group4 = groups.CreateGroup(group2, "third2");*/
 
             #endregion
 
@@ -57,7 +62,10 @@
             var dset8 = datasets.GetDataset<Byte>(file2, "/char");
             var dset9 = datasets.GetDataset<Byte>(file2, "/Arrays/char");
 
-            var dset12 = datasets.RemoveDataset(file2, "/int");*/
+            var dset10 = datasets.RemoveDataset(file2, "/int");
+
+            var dset11 = datasets.GetDataset<string>(file2, "Arrays/vlen_string");
+            var dset13 = datasets.GetDataset<string>(file2, "/vlen_string");*/
 
             #endregion
 
