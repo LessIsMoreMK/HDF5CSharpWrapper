@@ -1,4 +1,7 @@
-﻿namespace HDF5CSharpWrapper.ConsoleApp
+﻿using System;
+using System.Collections.Generic;
+
+namespace HDF5CSharpWrapper.ConsoleApp
 {
     internal class Program
     {
@@ -7,14 +10,15 @@
             var fileBasic = new File();
             var groups = new Groups();
             var datasets = new Datasets();
+            var attributes = new Attributes();
 
-            var file = fileBasic.Create("t.h5");
-            var file2 = fileBasic.Open("test.h5");
+            var file = fileBasic.CreateFile("t.h5");
+            var file2 = fileBasic.OpenFile("test.h5");
 
             #region Groups
 
-            /*var group = groups.OpenGroup(file2, "Arrays");
-            var group2 = groups.CreateGroup(file, "GroupName");
+            var group = groups.CreateGroup(file, "Arrays");
+            /*var group2 = groups.CreateGroup(file, "GroupName");
             var group3 = groups.CreateGroup(file, "second");
             var group4 = groups.CreateGroup(group2, "third2");*/
 
@@ -25,9 +29,9 @@
             /*int[] intArray = { 1, 2, 3, 4, 5 };
             int[,] intTwoDimArray = { { 1, 2 },
                                       { 3, 4 } };
-            float[] doubleArray = { 25.0 };
-            float[,] doubleTwoDimArray = { { 1.1, 2.2 },
-                                            { 3.3, 4.4} };
+            float[] doubleArray = { 25.0F };
+            float[,] doubleTwoDimArray = { { 1.1F, 2.2F },
+                                            { 3.3F, 4.4F} };
             byte[] byteArray = { 1, 0, 1 };
             byte[,] byteTwoDimArray = { { 1, 0 },
                                         { 1, 1 } };
@@ -35,11 +39,10 @@
             byte[,] charArray = { { 32, 33 },
                                      { 34, 35 } };
 
-            sbyte[,,] imageColorArray = { { { 1, 2, 3}, {4, 5, 6} },
-                                          { { 7, 8, 9}, {10, 11, 12} } };
+            
 
 
-            var dataset = datasets.SetDataset<int>(file, "int", intArray);
+            var dataset = datasets.SetDataset<int>(group, "int", intArray);
             var dataset2 = datasets.SetDataset<int>(file, "intTwoDim", intTwoDimArray);
             var dataset3 = datasets.SetDataset<float>(file, "double", doubleArray);
             var dataset4 = datasets.SetDataset<float>(file, "doubleTwoDim", doubleTwoDimArray);
@@ -58,15 +61,38 @@
             var dset8 = datasets.GetDataset<Byte>(file2, "/char");
             var dset9 = datasets.GetDataset<Byte>(file2, "/Arrays/char");
 
-            var dset10 = datasets.RemoveDataset(file2, "/int");
 
             var dset11 = datasets.GetDataset<string>(file2, "Arrays/vlen_string");
             var dset13 = datasets.GetDataset<string>(file2, "/vlen_string");*/
 
+
+            sbyte[,,] imageColorArray = { { { 1, 2, 3}, {4, 5, 6} },
+                                          { { 7, 8, 9}, {10, 11, 12} } };
+            int[] intValues = new[] { 1, 2 };
+            string[] stringArray = { "tu jest napis śćąęłóżźń", "asdf", "asdf" };
+            string[] arr = { "IMAGE" };
+            int[] arr2 = { 0, 255 };
+            string[] arr3 = { "IMAGE_TRUECOLOR" };
+            string[] arr4 = { "1.2" };
+            string[] arr5 = { "INTERPLACE_PIXEL" };
+
+            var dataset5 = datasets.SetDataset<sbyte>(file, "imageColor", imageColorArray);
+            var attribut6 = attributes.SetAttribute<string>(file, "CLASS", arr, "imageColor");
+            var attribut7 = attributes.SetAttribute<int>(file, "IMAGE_MINMAXRANGE", arr2, "imageColor");
+            var attribut8 = attributes.SetAttribute<string>(file, "IMAGE_SUBCLASS", arr3, "imageColor");
+            var attribut9 = attributes.SetAttribute<string>(file, "IMAGE_VERSION", arr4, "imageColor"); 
+            var attribut10 = attributes.SetAttribute<string>(file, "INTERPLACE_MODE", arr5, "imageColor");
+
+            var attribut = attributes.SetAttribute<int>(group, "attrname", intValues, "int");
+            var attribut2 = attributes.SetAttribute<string>(group, "attrnamee", stringArray, "int");
+            var attribute3 = attributes.GetAttribute<int>(group, "attrname",  "int");
+            var attribute4 = attributes.GetAttribute<string>(group, "attrnamee",  "int");
+
+
             #endregion
 
-            fileBasic.Close(file);
-            fileBasic.Close(file2);
+            fileBasic.CloseFile(file);
+            fileBasic.CloseFile(file2);
         }
     }
 }
