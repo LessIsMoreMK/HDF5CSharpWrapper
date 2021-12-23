@@ -71,22 +71,22 @@ namespace HDF5CSharpWrapper.ConsoleApp
             int[] intValues = new[] { 1, 2 };
             string[] stringArray = { "tu jest napis śćąęłóżźń", "asdf", "asdf" };
             string[] arr = { "IMAGE" };
-            int[] arr2 = { 0, 255 };
+            byte[] arr2 = { 0, 255 };
             string[] arr3 = { "IMAGE_TRUECOLOR" };
             string[] arr4 = { "1.2" };
-            string[] arr5 = { "INTERPLACE_PIXEL" };
+            string[] arr5 = { "INTERLACE_PIXEL" };
 
             var dataset5 = datasets.SetDataset<sbyte>(file, "imageColor", imageColorArray);
             var attribut6 = attributes.SetAttribute<string>(file, "CLASS", arr, "imageColor");
-            var attribut7 = attributes.SetAttribute<int>(file, "IMAGE_MINMAXRANGE", arr2, "imageColor");
+            var attribut7 = attributes.SetAttribute<byte>(file, "IMAGE_MINMAXRANGE", arr2, "imageColor");
             var attribut8 = attributes.SetAttribute<string>(file, "IMAGE_SUBCLASS", arr3, "imageColor");
             var attribut9 = attributes.SetAttribute<string>(file, "IMAGE_VERSION", arr4, "imageColor"); 
-            var attribut10 = attributes.SetAttribute<string>(file, "INTERPLACE_MODE", arr5, "imageColor");
+            var attribut10 = attributes.SetAttribute<string>(file, "INTERLACE_MODE", arr5, "imageColor");
 
-            var attribut = attributes.SetAttribute<int>(group, "attrname", intValues, "int");
+            /*var attribut = attributes.SetAttribute<int>(group, "attrname", intValues, "int");
             var attribut2 = attributes.SetAttribute<string>(group, "attrnamee", stringArray, "int");
             var attribute3 = attributes.GetAttribute<int>(group, "attrname",  "int");
-            var attribute4 = attributes.GetAttribute<string>(group, "attrnamee",  "int");
+            var attribute4 = attributes.GetAttribute<string>(group, "attrnamee",  "int");*/
 
 
             #endregion
