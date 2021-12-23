@@ -58,7 +58,7 @@ namespace HDF5CSharpWrapper
         /// <param name="groupLocationId">Group Id to be removed</param>
         /// <param name="groupName">Group name to be removed</param>
         /// <returns>0 if successful, -1 if not</returns>
-        public long RemoveGroup(long groupLocationId, string groupName)
+        public long DeleteGroup(long groupLocationId, string groupName)
             => H5L.delete(groupLocationId, groupName);
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace HDF5CSharpWrapper
         /// <param name="groupLocationId"></param>
         /// <param name="groupName"></param>
         /// <returns>True if existing False if not</returns>
-        public static bool IsGroupExisting(long groupLocationId, string groupName)
+        public bool IsGroupExisting(long groupLocationId, string groupName)
             => H5L.exists(groupLocationId, groupName) > 0;
 
         /*public static int CloseGroup(long groupId)

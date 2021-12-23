@@ -1,5 +1,4 @@
-﻿using HDF5CSharpWrapper.Helpers;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Linq;
 using System.Threading;
@@ -13,6 +12,7 @@ namespace HDF5CSharpWrapper.Tests
         static File file;
         static Datasets datasets;
         static long fileIdSets;
+        static long fileIdSets2;
         static long fileIdGets;
 
         [ClassInitialize]
@@ -21,8 +21,9 @@ namespace HDF5CSharpWrapper.Tests
             file = new File();
             datasets = new Datasets();
             
-            fileIdSets = file.Create(DirectoryName + "datasetsSetsTest.h5");
-            fileIdGets = file.Open(DirectoryName + "datasetsGetsTest.h5");
+            fileIdSets = file.CreateFile(DirectoryName + "datasetsSetsTest.h5");
+            fileIdSets2 = file.CreateFile(DirectoryName + "datasetsSets2Test.h5");
+            fileIdGets = file.OpenFile(DirectoryName + "datasetsGetsTest.h5");
 
             int[] Array = { 1 };
             datasets.SetDataset<int>(fileIdSets, "datasetname", Array);
@@ -31,8 +32,9 @@ namespace HDF5CSharpWrapper.Tests
         [ClassCleanup]
         public static void ClassCleanup()
         {
-            file.Close(fileIdSets);
-            file.Close(fileIdGets);
+            file.CloseFile(fileIdSets);
+            file.CloseFile(fileIdSets2);
+            file.CloseFile(fileIdGets);
         }
 
         #region GetDataset
@@ -61,9 +63,9 @@ namespace HDF5CSharpWrapper.Tests
         [TestMethod]
         public void GetDataset_TypeFloat()
         {
-            var datasetResult = datasets.GetDataset<Double>(fileIdGets, "/float");
-            double[] datasetResultArray = (double[])datasetResult;
-            double[] expectedValue = { 25.0 };
+            var datasetResult = datasets.GetDataset<float>(fileIdGets, "/float");
+            float[] datasetResultArray = (float[])datasetResult;
+            float[] expectedValue = { 25.0F };
 
             Assert.IsTrue(datasetResultArray.SequenceEqual(expectedValue), "Dataset not get correctly.");
         }
@@ -71,12 +73,10 @@ namespace HDF5CSharpWrapper.Tests
         [TestMethod]
         public void GetDataset_TypeFloatTwoDim()
         {
-            var datasetResult = datasets.GetDataset<Double>(fileIdGets, "/Arrays/float");
-            double[,] datasetResultArray = (double[,])datasetResult;
-            //double[,] expectedValue = { { 1.1000000238418579, 2.2000000476837158 },
-            //                            { 3.2999999523162842, 4.4000000953674316} };
-            double[,] expectedValue = { { 1.1, 2.2 },
-                                     { 3.3, 4.4} };
+            var datasetResult = datasets.GetDataset<float>(fileIdGets, "/Arrays/float");
+            float[,] datasetResultArray = (float[,])datasetResult;
+            float[,] expectedValue = { { 1.1F, 2.2F },
+                                       { 3.3F, 4.4F } };
 
             Assert.IsTrue(SequenceEqualsExtension.SequenceEquals(expectedValue, datasetResultArray), "Dataset not get correctly.");
         }
@@ -149,8 +149,8 @@ namespace HDF5CSharpWrapper.Tests
             var dataset = datasets.SetDataset<int>(fileIdSets, "int", intArray);
             Assert.IsTrue(dataset != -1, "Dataset not set correctly.");
         }
-        [TestMethod]
 
+        [TestMethod]
         public void SetDataset_TypeIntTwoDim()
         {
             int[,] intTwoDimArray = { { 1, 2 },
@@ -158,33 +158,33 @@ namespace HDF5CSharpWrapper.Tests
             var dataset = datasets.SetDataset<int>(fileIdSets, "intTwoDim", intTwoDimArray);
             Assert.IsTrue(dataset != -1, "Dataset not set correctly.");
         }
-        [TestMethod]
 
+        [TestMethod]
         public void SetDataset_TypeFloat()
         {
             double[,] doubleTwoDimArray = { { 1.1, 2.2 },
                                             { 3.3, 4.4} };
-            var dataset = datasets.SetDataset<double>(fileIdSets, "float", doubleTwoDimArray);
+            var dataset = datasets.SetDataset<float>(fileIdSets, "float", doubleTwoDimArray);
             Assert.IsTrue(dataset != -1, "Dataset not set correctly.");
         }
-        [TestMethod]
 
+        [TestMethod]
         public void SetDataset_TypeFloatTwoDim()
         {
             double[] doubleArray = { 25.0 };
-            var dataset = datasets.SetDataset<double>(fileIdSets, "floatTwoDim", doubleArray);
+            var dataset = datasets.SetDataset<float>(fileIdSets, "floatTwoDim", doubleArray);
             Assert.IsTrue(dataset != -1, "Dataset not set correctly.");
         }
-        [TestMethod]
 
+        [TestMethod]
         public void SetDataset_TypeBoolean()
         {
             byte[] byteArray = { 1, 0, 1 };
             var dataset = datasets.SetDataset<byte>(fileIdSets, "byte", byteArray);
             Assert.IsTrue(dataset != -1, "Dataset not set correctly.");
         }
-        [TestMethod]
 
+        [TestMethod]
         public void SetDataset_TypeBooleanTwoDim()
         {
             byte[,] byteTwoDimArray = { { 1, 0 },
@@ -207,7 +207,7 @@ namespace HDF5CSharpWrapper.Tests
         {
             sbyte[,,] imageColorArray = { { { 1, 2, 3}, {4, 5, 6} },
                                           { { 7, 8, 9}, {10, 11, 12} } };
-            var dataset = datasets.SetDataset<sbyte>(fileIdSets, "imageColor", imageColorArray);
+            var dataset = datasets.SetDataset<byte>(fileIdSets, "imageColor", imageColorArray);
             Assert.IsTrue(dataset != -1, "Dataset not set correctly.");
         }
 
@@ -226,14 +226,14 @@ namespace HDF5CSharpWrapper.Tests
         [TestMethod]
         public void RemoveDataset()
         {
-            var removeResult = datasets.RemoveDataset(fileIdSets, "datasetname");
+            var removeResult = datasets.DeleteDataset(fileIdSets, "datasetname");
             Assert.IsTrue(removeResult == 0, "Group not removed correctly.");
         }
 
         [TestMethod]
         public void RemoveNotExistingDataset()
         {
-            var removeResult = datasets.RemoveDataset(fileIdSets, "datasetnameee");
+            var removeResult = datasets.DeleteDataset(fileIdSets, "datasetnameee");
             Assert.IsTrue(removeResult == -1, "Group removed, should failed.");
         }
 
@@ -244,20 +244,20 @@ namespace HDF5CSharpWrapper.Tests
         {
             double[,] doubleTwoDimArray = { { 1.1, 2.2 },
                                             { 3.3, 4.4} };
-            long dataset0 = -1, dataset1 = -1, dataset2 = -1; 
+            long dataset0 = -1, dataset1 = -1, dataset2 = -1;
             Thread[] threads = new Thread[3];
 
             threads[0] = new Thread(() =>
             {
-                dataset0 = datasets.SetDataset<double>(fileIdSets, "float0", doubleTwoDimArray);
+                dataset0 = datasets.SetDataset<float>(fileIdSets, "float0", doubleTwoDimArray);
             });
             threads[1] = new Thread(() =>
             {
-                dataset1 = datasets.SetDataset<double>(fileIdSets, "float1", doubleTwoDimArray);
+                dataset1 = datasets.SetDataset<float>(fileIdSets, "float1", doubleTwoDimArray);
             });
             threads[2] = new Thread(() =>
             {
-                dataset2 = datasets.SetDataset<double>(fileIdSets, "float2", doubleTwoDimArray);
+                dataset2 = datasets.SetDataset<float>(fileIdSets, "float2", doubleTwoDimArray);
             });
 
             foreach (Thread thread in threads)
@@ -268,5 +268,50 @@ namespace HDF5CSharpWrapper.Tests
 
             Assert.IsTrue(dataset0 != -1 && dataset1 != -1 && dataset2 != -1, "MultiThreadedTest failed.");
         }
+
+        [TestMethod]
+        public void MultiThreadedTest2()
+        {
+            double[,] doubleTwoDimArray = { { 1.1, 2.2 },
+                                            { 3.3, 4.4} };
+            long dataset0 = -1, dataset1 = -1, dataset2 = -1,
+                 dataset3 = -1, dataset4 = -1, dataset5 = -1; 
+            Thread[] threads = new Thread[6];
+
+            threads[0] = new Thread(() =>
+            {
+                dataset0 = datasets.SetDataset<float>(fileIdSets, "floatt0", doubleTwoDimArray);
+            });
+            threads[1] = new Thread(() =>
+            {
+                dataset1 = datasets.SetDataset<float>(fileIdSets2, "floatt1", doubleTwoDimArray);
+            });
+            threads[2] = new Thread(() =>
+            {
+                dataset2 = datasets.SetDataset<float>(fileIdSets, "floatt2", doubleTwoDimArray);
+            });
+            threads[3] = new Thread(() =>
+            {
+                dataset3 = datasets.SetDataset<float>(fileIdSets2, "floatt3", doubleTwoDimArray);
+            });
+            threads[4] = new Thread(() =>
+            {
+                dataset4 = datasets.SetDataset<float>(fileIdSets, "floatt4", doubleTwoDimArray);
+            });
+            threads[5] = new Thread(() =>
+            {
+                dataset5 = datasets.SetDataset<float>(fileIdSets2, "floatt5", doubleTwoDimArray);
+            });
+
+            foreach (Thread thread in threads)
+                thread.Start();
+
+            foreach (Thread thread in threads)
+                thread.Join();
+
+            Assert.IsTrue(dataset0 != -1 && dataset1 != -1 && dataset2 != -1 && 
+                            dataset3 != -1 && dataset4 != -1 && dataset5 != -1, "MultiThreadedTest2 failed.");
+        }
+
     }
 }

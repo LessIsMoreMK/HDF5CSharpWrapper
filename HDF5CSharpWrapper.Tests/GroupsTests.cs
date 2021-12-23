@@ -18,7 +18,7 @@ namespace HDF5CSharpWrapper.Tests
             file = new File();
             groups = new Groups();
 
-            openedFileId = file.Create(DirectoryName + "groupsTest.h5");
+            openedFileId = file.CreateFile(DirectoryName + "groupsTest.h5");
             var openedGroupId = groups.CreateGroup(openedFileId, "Arrays");
             var openedGroupId2 = groups.CreateGroup(openedGroupId, "Arrays2");
             var openedGroupId3 = groups.CreateGroup(openedFileId, "Arrays3");
@@ -27,7 +27,7 @@ namespace HDF5CSharpWrapper.Tests
         [ClassCleanup]
         public static void ClassCleanup()
         {
-            file.Close(openedFileId);
+            file.CloseFile(openedFileId);
         }
 
         [TestMethod]
@@ -67,7 +67,7 @@ namespace HDF5CSharpWrapper.Tests
         [TestMethod]
         public void RemoveGroup()
         {
-            var removedGroupId = groups.RemoveGroup(openedFileId, "Arrays3");
+            var removedGroupId = groups.DeleteGroup(openedFileId, "Arrays3");
             Assert.IsTrue(removedGroupId == 0, "Removed group failed.");
         }
     }

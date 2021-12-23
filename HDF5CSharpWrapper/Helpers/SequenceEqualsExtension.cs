@@ -1,7 +1,6 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
-namespace HDF5CSharpWrapper.Helpers
+namespace HDF5CSharpWrapper
 {
     public static class SequenceEqualsExtension
     {

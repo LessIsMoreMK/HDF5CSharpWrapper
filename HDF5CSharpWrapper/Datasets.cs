@@ -27,7 +27,7 @@ namespace HDF5CSharpWrapper
             if (typeof(T) == typeof(string)) 
                 return GetStringDataset(locationId, datasetName);
 
-            var dataType = GetDatatype(typeof(T));
+            var dataType = DataTypeHelpers.GetDataType(typeof(T));
             var datasetId = H5D.open(locationId, datasetName);
             Array dataSet;
             var spaceId = H5D.get_space(datasetId);
@@ -138,7 +138,7 @@ namespace HDF5CSharpWrapper
 
             ulong[] dims = Enumerable.Range(0, dset.Rank).Select(i => { return (ulong)dset.GetLength(i); }).ToArray();
             var spaceId = H5S.create_simple(dset.Rank, dims, null);
-            var dataType = GetDatatype(typeof(T));
+            var dataType = DataTypeHelpers.GetDataType(typeof(T));
 
             if (dataType == H5T.C_S1)
                 H5T.set_size(dataType, new IntPtr(2));
@@ -162,14 +162,13 @@ namespace HDF5CSharpWrapper
         /// <returns>Dataset id or -1 if failed</returns>
         public long SetStringDataset(long locationId, string datasetName, Array dset)
         {
-            long datatype = H5T.create(H5T.class_t.STRING, H5T.VARIABLE);
-            H5T.set_cset(datatype, H5T.cset_t.UTF8);
-            H5T.set_strpad(datatype, H5T.str_t.NULLTERM);
+            long dataType = H5T.create(H5T.class_t.STRING, H5T.VARIABLE);
+            H5T.set_cset(dataType, H5T.cset_t.UTF8);
+            H5T.set_strpad(dataType, H5T.str_t.NULLTERM);
             int strSz = dset.Length;
             long spaceId = H5S.create_simple(1, new[] { (ulong)strSz }, null);
 
-            string normalizedName = datasetName;
-            var datasetId = H5D.create(locationId, normalizedName, datatype, spaceId);
+            var datasetId = H5D.create(locationId, datasetName, dataType, spaceId);
             
             if (datasetId == -1)
                 return -1;
@@ -185,7 +184,7 @@ namespace HDF5CSharpWrapper
             }
 
             var hnd = GCHandle.Alloc(wdata, GCHandleType.Pinned);
-            var result = H5D.write(datasetId, datatype, H5S.ALL, H5S.ALL, H5P.DEFAULT, hnd.AddrOfPinnedObject());
+            var result = H5D.write(datasetId, dataType, H5S.ALL, H5S.ALL, H5P.DEFAULT, hnd.AddrOfPinnedObject());
             hnd.Free();
 
             for (int i = 0; i < strSz; ++i)
@@ -193,7 +192,7 @@ namespace HDF5CSharpWrapper
 
             H5D.close(datasetId);
             H5S.close(spaceId);
-            H5T.close(datatype);
+            H5T.close(dataType);
             return datasetId;
         }
 
@@ -203,41 +202,7 @@ namespace HDF5CSharpWrapper
         /// <param name="locationId">Location id in which dataset is</param>
         /// <param name="datasetPath">Path with name to dataset</param>
         /// <returns>0 if successfull -1 if not</returns>
-        public long RemoveDataset(long locationId, string datasetPath)
+        public long DeleteDataset(long locationId, string datasetPath)
             => H5L.delete(locationId, datasetPath);
-
-        /// <summary>
-        /// Get hdf5 variable type
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public long GetDatatype(Type type)
-        {
-            long dataType;
-
-            var typeCode = Type.GetTypeCode(type);
-            switch (typeCode)
-            {
-                case TypeCode.Byte: //Bool Char
-                    dataType = H5T.NATIVE_UINT8;
-                    break;
-                case TypeCode.SByte: //Image
-                    dataType = H5T.NATIVE_INT8;
-                    break;
-                case TypeCode.Int32: //Int
-                    dataType = H5T.NATIVE_INT32;
-                    break;
-                case TypeCode.Double: //Float
-                    dataType = H5T.NATIVE_DOUBLE;
-                    break;
-                case TypeCode.String:
-                    dataType = H5T.NATIVE_UCHAR;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(type.Name, $"Data Type {type} not supported.");
-            }
-            return dataType;
-        }
     }
 }

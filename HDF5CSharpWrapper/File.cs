@@ -13,7 +13,7 @@ namespace HDF5CSharpWrapper
         /// <param name="filename">A filename to be opened</param>
         /// <param name="fileMode">A mode in which file is opened ReadWrite/ReadOnly</param>
         /// <returns>File ID</returns>
-        public long Open(string filename, FileMode fileMode = FileMode.ReadWrite)
+        public long OpenFile(string filename, FileMode fileMode = FileMode.ReadWrite)
             => H5F.open(filename, (uint)fileMode);
 
         /// <summary>
@@ -22,7 +22,7 @@ namespace HDF5CSharpWrapper
         /// <param name="filename">A filename to be created</param>
         /// <param name="fileMode">A mode in which file is created WriteNew/WriteIfNew</param>
         /// <returns>File ID</returns>
-        public long Create(string filename, FileMode fileMode = FileMode.WriteNew)
+        public long CreateFile(string filename, FileMode fileMode = FileMode.WriteNew)
             => H5F.create(filename, (uint)fileMode);
 
         /// <summary>
@@ -30,7 +30,7 @@ namespace HDF5CSharpWrapper
         /// </summary>
         /// <param name="fileId">File ID to be closed</param>
         /// <returns>0 if successful, -1 if not</returns>
-        public long Close(long fileId)
+        public long CloseFile(long fileId)
             => H5F.close(fileId);
     }
 }
