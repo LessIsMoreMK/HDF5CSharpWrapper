@@ -1,6 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.IO;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace HDF5CSharpWrapper.Tests
 {
@@ -11,6 +11,7 @@ namespace HDF5CSharpWrapper.Tests
         static File file;
         static Groups groups;
         static long openedFileId;
+        static long openedFileId2;
 
         [ClassInitialize]
         public static void ClassInit(TestContext context)
@@ -19,6 +20,7 @@ namespace HDF5CSharpWrapper.Tests
             groups = new Groups();
 
             openedFileId = file.CreateFile(DirectoryName + "groupsTest.h5");
+            openedFileId2 = file.OpenFile(DirectoryName + "groupsTest3.h5");
             var openedGroupId = groups.CreateGroup(openedFileId, "Arrays");
             var openedGroupId2 = groups.CreateGroup(openedGroupId, "Arrays2");
             var openedGroupId3 = groups.CreateGroup(openedFileId, "Arrays3");
@@ -69,6 +71,24 @@ namespace HDF5CSharpWrapper.Tests
         {
             var removedGroupId = groups.DeleteGroup(openedFileId, "Arrays3");
             Assert.IsTrue(removedGroupId == 0, "Removed group failed.");
+        }
+
+        [TestMethod]
+        public void GetGroups()
+        {
+            var expectedResult = new List<string> { "/groupName" };
+
+            var groupsList = groups.GetGroups(openedFileId2);
+            Assert.IsTrue(groupsList.SequenceEqual(expectedResult), "GetGroups failed.");
+        }
+
+        [TestMethod]
+        public void GetGroupsAllDepth()
+        {
+            var expectedResult = new List<string> { "/groupName", "/groupName/second", "/groupName/second/third" };
+
+            var groupsList = groups.GetGroups(openedFileId2, false);
+            Assert.IsTrue(groupsList.SequenceEqual(expectedResult), "GetGroups failed.");
         }
     }
 }

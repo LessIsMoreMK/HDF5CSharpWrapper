@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Runtime;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -69,6 +71,82 @@ namespace HDF5CSharpWrapper
         /// <returns>True if existing False if not</returns>
         public bool IsGroupExisting(long groupLocationId, string groupName)
             => H5L.exists(groupLocationId, groupName) > 0;
+
+        /// <summary>
+        /// Get list of groups in specified location
+        /// </summary>
+        /// <param name="locationId">Group or file id</param>
+        /// <param name="oneLevelDepth">True if only one level groups depth should be shown/param>
+        /// <returns>List of containing groups names</returns>
+        public List<string> GetGroups(long locationId, bool oneLevelDepth = true)
+        {
+            var elements = new List<string>();
+
+            try
+            {
+                ulong idx = 0;
+                H5L.iterate(locationId, H5.index_t.NAME, H5.iter_order_t.INC, ref idx, Callback, Marshal.StringToHGlobalAnsi(""));
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Error durning reading groups structure of {locationId}. Error: {e}");
+            }
+
+            int Callback(long elementId, IntPtr intPtrName, ref H5L.info_t info, IntPtr intPtrUserData)
+            {
+                ulong idx2 = 0;
+                long datasetId = -1;
+                long groupId;
+                H5O.type_t objectType = H5O.type_t.GROUP;
+                var name = Marshal.PtrToStringAnsi(intPtrName);
+                var userData = Marshal.PtrToStringAnsi(intPtrUserData);
+                var fullName = userData + "/" + name;
+
+                var gInfo = new H5O.info_t();
+                H5O.get_info_by_name(elementId, fullName, ref gInfo);
+
+                if (gInfo.type == H5O.type_t.GROUP && (H5L.exists(elementId, name) >= 0))
+                    groupId = H5G.open(elementId, name);
+                else
+                    groupId = -1L;
+
+                if (H5I.is_valid(groupId) > 0)
+                    objectType = H5O.type_t.GROUP;
+                else
+                {
+                    datasetId = H5D.open(elementId, name);
+                    if ((H5I.is_valid(datasetId) > 0))
+                        objectType = H5O.type_t.DATASET;
+                    else
+                        objectType = H5O.type_t.UNKNOWN;
+                }
+
+                var parent = elements.FirstOrDefault(e =>
+                {
+                    var index = fullName.LastIndexOf("/", StringComparison.Ordinal);
+                    var partial = fullName.Substring(0, index);
+                    return partial.Equals(e);
+
+                });
+
+                if (parent == null && objectType == H5O.type_t.GROUP)
+                    elements.Add(fullName);
+                else if (objectType == H5O.type_t.GROUP)
+                    elements.Add(fullName);
+
+                if (objectType == H5O.type_t.GROUP && !oneLevelDepth)
+                    H5L.iterate(groupId, H5.index_t.NAME, H5.iter_order_t.INC, ref idx2, Callback, Marshal.StringToHGlobalAnsi(fullName));
+
+                if (H5I.is_valid(groupId) > 0)
+                    H5G.close(groupId);
+                if (H5I.is_valid(datasetId) > 0)
+                    H5D.close(datasetId);
+
+                return 0;
+            }
+
+            return elements;
+        }
 
         /*public static int CloseGroup(long groupId)
             => H5G.close(groupId);*/

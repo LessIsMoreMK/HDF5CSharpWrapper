@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
@@ -313,5 +314,29 @@ namespace HDF5CSharpWrapper.Tests
                             dataset3 != -1 && dataset4 != -1 && dataset5 != -1, "MultiThreadedTest2 failed.");
         }
 
+        [TestMethod]
+        public void GetDatasets()
+        {
+            var expectedResult = new List<string>
+            { "/bool", "/char", "/color_image", "/enum", "/float",
+              "/float1", "/float3", "/float5", "/floatt1", "/floatt3",
+              "/floatt5", "/int", "/mono_image", "/string", "/vlen_string", };
+
+            var datasetsList = datasets.GetDetasets(fileIdGets);
+            Assert.IsTrue(datasetsList.SequenceEqual(expectedResult), "GetDatasets failed.");
+        }
+
+        [TestMethod]
+        public void GetDatasetsAllDepth()
+        {
+            var expectedResult = new List<string>
+            { "/Arrays/char", "/Arrays/float", "/Arrays/int", "/Arrays/string", "/Arrays/vlen_string",
+              "/bool", "/char", "/color_image", "/enum", "/float",
+              "/float1", "/float3", "/float5", "/floatt1", "/floatt3",
+              "/floatt5", "/int", "/mono_image", "/string", "/vlen_string", };
+
+            var datasetsList = datasets.GetDetasets(fileIdGets, false);
+            Assert.IsTrue(datasetsList.SequenceEqual(expectedResult), "GetDatasets failed.");
+        }
     }
 }
