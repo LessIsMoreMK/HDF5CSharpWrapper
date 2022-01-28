@@ -81,11 +81,15 @@ namespace HDF5CSharpWrapper
             var spaceId = H5D.get_space(datasetId);
             int rank = H5S.get_simple_extent_ndims(spaceId);
             long count = H5S.get_simple_extent_npoints(spaceId);
+            ulong[] maxDims = new ulong[rank];
+            ulong[] dims = new ulong[rank];
+            long memId = H5S.get_simple_extent_dims(spaceId, dims, maxDims);
+            long[] lengths = dims.Select(d => Convert.ToInt64(d)).ToArray();
 
             IntPtr[] rdata = new IntPtr[count];
 
             GCHandle gcHandle = GCHandle.Alloc(rdata, GCHandleType.Pinned);
-            H5D.read(datasetId, typeId, H5S.ALL, H5S.ALL,  H5P.DEFAULT, gcHandle.AddrOfPinnedObject());
+            H5D.read(datasetId, typeId, H5S.ALL, H5S.ALL, H5P.DEFAULT, gcHandle.AddrOfPinnedObject());
 
             var resultArray = new List<string>();
             for (int i = 0; i < rdata.Length; ++i)
@@ -109,15 +113,15 @@ namespace HDF5CSharpWrapper
 
             if (rank == 2)
             {
-                string[,] resultArray2 = new string[resultArray.Count/2, resultArray.Count/2];
+                string[,] resultArray2 = new string[lengths[0], lengths[1]];
 
                 var index = 0;
-                for (int i=0; i < resultArray.Count/2;i++)
-                {
-                    resultArray2[i, 0] = resultArray[index];
-                    resultArray2[i, 1] = resultArray[index+1];
-                    index += 2;
-                }
+                for (long i = 0; i < lengths[0]; i++)
+                    for (long j = 0; j < lengths[1]; j++)
+                    {
+                        resultArray2[i, j] = resultArray[index];
+                        index++;
+                    }
                 return resultArray2;
             }
             else
