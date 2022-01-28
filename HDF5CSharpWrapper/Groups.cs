@@ -148,7 +148,12 @@ namespace HDF5CSharpWrapper
             return elements;
         }
 
-        /*public static int CloseGroup(long groupId)
-            => H5G.close(groupId);*/
+        /// <summary>
+        /// Closes spiecified group
+        /// </summary>
+        /// <param name="groupId">Group id to be closed</param>
+        /// <returns>0 if successful, -1 if not</returns>
+        public int CloseGroup(long groupId)
+            => H5G.close(groupId);
     }
 }
