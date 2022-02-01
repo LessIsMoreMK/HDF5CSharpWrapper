@@ -101,6 +101,8 @@ namespace HDF5CSharpWrapper
                 var name = Marshal.PtrToStringAnsi(intPtrName);
                 var userData = Marshal.PtrToStringAnsi(intPtrUserData);
                 var fullName = userData + "/" + name;
+                if (fullName.StartsWith("/"))
+                    fullName = fullName.Remove(0, 1);
 
                 var gInfo = new H5O.info_t();
                 H5O.get_info_by_name(elementId, fullName, ref gInfo);
@@ -124,9 +126,10 @@ namespace HDF5CSharpWrapper
                 var parent = elements.FirstOrDefault(e =>
                 {
                     var index = fullName.LastIndexOf("/", StringComparison.Ordinal);
-                    var partial = fullName.Substring(0, index);
+                    var partial = String.Empty;
+                    if(index!=-1)
+                        partial = fullName.Substring(0, index);
                     return partial.Equals(e);
-
                 });
 
                 if (parent == null && objectType == H5O.type_t.GROUP)
